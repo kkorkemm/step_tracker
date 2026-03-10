@@ -7,7 +7,10 @@ import '../../../data/repositories/tracker_repository.dart';
 import '../../../data/repositories/challenge_repository.dart';
 
 // Состояние главного экрана
+enum ViewState { loading, normal, empty, error }
+
 class HomeState {
+  final ViewState state;  // текущее состояние
   final int todaySteps;
   final double todayDistance;
   final Challenge? activeChallenge;
@@ -43,6 +46,21 @@ class HomeState {
       error: error,
     );
   }
+  final String? errorMessage;
+
+  const HomeState({
+    this.state = ViewState.loading,
+    this.todaySteps = 0,
+    this.todayDistance = 0,
+    this.activeChallenge,
+    this.streak = const Streak.empty(),
+    this.errorMessage,
+  });
+
+  bool get isLoading => state == ViewState.loading;
+  bool get isEmpty => state == ViewState.empty;
+  bool get isError => state == ViewState.error;
+  bool get isNormal => state == ViewState.normal;
 }
 
 class HomeViewModel extends ChangeNotifier {
