@@ -6,36 +6,29 @@ import '../../../data/repositories/tracker_repository.dart';
 import '../../../data/repositories/challenge_repository.dart';
 
 // Состояние главного экрана
+enum ViewState { loading, normal, empty, error }
+
 class HomeState {
+  final ViewState state;  // текущее состояние
   final int todaySteps;
   final double todayDistance;
   final Challenge? activeChallenge;
-  final bool isLoading;
-  final String? error;
+  final Streak streak;
+  final String? errorMessage;
 
   const HomeState({
+    this.state = ViewState.loading,
     this.todaySteps = 0,
     this.todayDistance = 0,
     this.activeChallenge,
-    this.isLoading = false,
-    this.error,
+    this.streak = const Streak.empty(),
+    this.errorMessage,
   });
 
-  HomeState copyWith({
-    int? todaySteps,
-    double? todayDistance,
-    Challenge? activeChallenge,
-    bool? isLoading,
-    String? error,
-  }) {
-    return HomeState(
-      todaySteps: todaySteps ?? this.todaySteps,
-      todayDistance: todayDistance ?? this.todayDistance,
-      activeChallenge: activeChallenge ?? this.activeChallenge,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
-    );
-  }
+  bool get isLoading => state == ViewState.loading;
+  bool get isEmpty => state == ViewState.empty;
+  bool get isError => state == ViewState.error;
+  bool get isNormal => state == ViewState.normal;
 }
 
 class HomeViewModel extends ChangeNotifier {
