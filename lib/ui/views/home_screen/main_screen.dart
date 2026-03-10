@@ -104,6 +104,46 @@ class MainScreen extends StatelessWidget {
               ),
             ],
           ),
+          const SizedBox(height: 16),
+
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+            decoration: BoxDecoration(
+              color: state.streak.isActive ? Colors.orange[50] : Colors.grey[50],
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(
+                color: state.streak.isActive ? Colors.orange : Colors.grey,
+              ),
+            ),
+            child: Row(
+              mainAxisSize: MainAxisSize.min,
+              children: [
+                Icon(
+                  Icons.whatshot,
+                  color: state.streak.isActive ? Colors.orange : Colors.grey,
+                  size: 20,
+                ),
+                const SizedBox(width: 8),
+                Text(
+                  'Стрик: ${state.streak.currentStreak} дней',
+                  style: TextStyle(
+                    color: state.streak.isActive ? Colors.orange : Colors.grey,
+                    fontWeight: FontWeight.bold,
+                  ),
+                ),
+                if (state.streak.longestStreak > state.streak.currentStreak) ...[
+                  const SizedBox(width: 8),
+                  Text(
+                    '(рекорд: ${state.streak.longestStreak})',
+                    style: TextStyle(
+                      color: Colors.grey[600],
+                      fontSize: 12,
+                    ),
+                  ),
+                ],
+              ],
+            ),
+          ),
         ],
       ),
     );
@@ -286,10 +326,32 @@ class MainScreen extends StatelessWidget {
   Widget _buildTestButtons(HomeViewModel viewModel) {
     return Column(
       children: [
-        OutlinedButton.icon(
-          onPressed: () => viewModel.addTestSteps(),
-          icon: const Icon(Icons.add),
-          label: const Text('Добавить 1000 шагов (тест)'),
+        Row(
+          children: [
+            // Кнопка +1000
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () => viewModel.addTestSteps(),
+                icon: const Icon(Icons.add),
+                label: const Text('+1000'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.green,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+            const SizedBox(width: 8),
+            Expanded(
+              child: OutlinedButton.icon(
+                onPressed: () => viewModel.resetSteps(),
+                icon: const Icon(Icons.refresh),
+                label: const Text('Сброс'),
+                style: OutlinedButton.styleFrom(
+                  foregroundColor: Colors.red,
+                ),
+              ),
+            ),
+          ],
         ),
         const SizedBox(height: 8),
         TextButton(
@@ -299,3 +361,4 @@ class MainScreen extends StatelessWidget {
       ],
     );
   }
+}

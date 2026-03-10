@@ -10,9 +10,8 @@ class Streak {
     required this.lastActiveDay,
     required this.isActive,
   });
-
-  // Создать пустой стрик (для первого запуска)
-  factory Streak.empty() {
+  
+  static Streak empty() {
     return Streak(
       currentStreak: 0,
       longestStreak: 0,

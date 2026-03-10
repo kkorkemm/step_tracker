@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import '../../../data/domain_models/challenge.dart';
+import '../../../data/domain_models/streak.dart';
 // ignore: unused_import
 import '../../../data/domain_models/tracker.dart';
 import '../../../data/repositories/tracker_repository.dart';
@@ -10,21 +11,26 @@ class HomeState {
   final int todaySteps;
   final double todayDistance;
   final Challenge? activeChallenge;
+  final Streak streak;
   final bool isLoading;
   final String? error;
 
-  const HomeState({
+  // Конструктор с правильной инициализацией
+  HomeState({
     this.todaySteps = 0,
     this.todayDistance = 0,
     this.activeChallenge,
+    Streak? streak,
     this.isLoading = false,
     this.error,
-  });
+  }) : this.streak = streak ?? Streak.empty(); // ВЫЗОВ ПОСЛЕ ДВОЕТОЧИЯ
 
+  // copyWith метод
   HomeState copyWith({
     int? todaySteps,
     double? todayDistance,
     Challenge? activeChallenge,
+    Streak? streak,
     bool? isLoading,
     String? error,
   }) {
@@ -32,6 +38,7 @@ class HomeState {
       todaySteps: todaySteps ?? this.todaySteps,
       todayDistance: todayDistance ?? this.todayDistance,
       activeChallenge: activeChallenge ?? this.activeChallenge,
+      streak: streak ?? this.streak,
       isLoading: isLoading ?? this.isLoading,
       error: error,
     );
@@ -42,7 +49,7 @@ class HomeViewModel extends ChangeNotifier {
   final TrackerRepository _trackerRepository;
   final ChallengeRepository _challengeRepository;
 
-  HomeState _state = const HomeState(isLoading: true);
+  HomeState _state =  HomeState(isLoading: true);
   HomeState get state => _state;
 
   HomeViewModel({
@@ -53,19 +60,24 @@ class HomeViewModel extends ChangeNotifier {
     _init();
   }
 
-  // Инициализация при создании
+ // Добавить метод для загрузки стрика
+  Future<void> _loadStreak() async {
+    final streak = await _trackerRepository.getStreak();
+    _state = _state.copyWith(streak: streak);
+  }
+
+  // Обновить _init()
   Future<void> _init() async {
     _state = _state.copyWith(isLoading: true);
     notifyListeners();
 
     try {
-      // Загружаем данные параллельно
       await Future.wait([
         _loadSteps(),
         _loadChallenge(),
+        _loadStreak(),                    // добавить загрузку стрика
       ]);
 
-      // Подписываемся на обновления шагов
       _trackerRepository.stepStream.listen((steps) {
         _onStepsUpdated(steps);
       });
@@ -79,6 +91,41 @@ class HomeViewModel extends ChangeNotifier {
     }
 
     notifyListeners();
+  }
+
+  // Обновить _onStepsUpdated
+  void _onStepsUpdated(int steps) async {
+    _state = _state.copyWith(
+      todaySteps: steps,
+      todayDistance: steps * 0.0008,
+    );
+    notifyListeners();
+
+    // Сохраняем шаги (метод сам обновит стрик)
+    await _trackerRepository.saveSteps(steps);
+    
+    // Обновляем прогресс челленджа
+    await _challengeRepository.updateProgress(
+      steps - _state.todaySteps,
+    );
+    
+    // Перезагружаем стрик (он уже обновился в saveSteps)
+    await _loadStreak();
+  }
+
+  Future<void> resetSteps() async {
+    await _trackerRepository.resetTodaySteps();  // теперь сбрасывает и шагомер
+    await _loadSteps();
+    await _loadStreak();
+  }
+
+  // Обновить refresh()
+  Future<void> refresh() async {
+    await Future.wait([
+      _loadSteps(),
+      _loadChallenge(),
+      _loadStreak(),
+    ]);
   }
 
   // Загрузка шагов
@@ -95,28 +142,6 @@ class HomeViewModel extends ChangeNotifier {
     final challenge = await _challengeRepository.getActiveChallenge();
     _state = _state.copyWith(activeChallenge: challenge);
   }
-
-  // Обновление при новых шагах
-  void _onStepsUpdated(int steps) {
-    _state = _state.copyWith(
-      todaySteps: steps,
-      todayDistance: steps * 0.0008,
-    );
-    notifyListeners();
-
-    // Сохраняем шаги и обновляем прогресс челленджа
-    _trackerRepository.saveSteps(steps);
-    _challengeRepository.updateProgress(
-      steps - _state.todaySteps, // разница с предыдущим значением
-    );
-  }
-
-  // Обновить данные (pull-to-refresh)
-  Future<void> refresh() async {
-    await _loadSteps();
-    await _loadChallenge();
-  }
-
   // Создать тестовый челлендж
   Future<void> createTestChallenge() async {
     await _challengeRepository.createTestChallenge();
