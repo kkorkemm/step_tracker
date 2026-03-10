@@ -299,4 +299,3 @@ class MainScreen extends StatelessWidget {
       ],
     );
   }
-}
