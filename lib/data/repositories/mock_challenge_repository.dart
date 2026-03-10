@@ -1,6 +1,6 @@
-import '../../domain/models/challenge.dart';
-import '../../domain/enums/challenge_status.dart';
-import '../../domain/enums/challenge_type.dart';
+import '../domain_models/challenge.dart';
+import '../enumerations/challenge_status.dart';
+import '../enumerations/challenge_type.dart';
 import '../mocks/mock_data.dart';
 
 class MockChallengeRepository {

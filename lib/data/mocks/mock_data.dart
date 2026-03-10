@@ -1,8 +1,8 @@
-import '../../domain/models/challenge.dart';
-import '../../domain/models/step_record.dart';
-import '../../domain/models/streak.dart';
-import '../../domain/enums/challenge_status.dart';
-import '../../domain/enums/challenge_type.dart';
+import '../domain_models/challenge.dart';
+import '../domain_models/streak.dart';
+import '../domain_models/tracker.dart';
+import '../enumerations/challenge_status.dart';
+import '../enumerations/challenge_type.dart';
 
 class MockData {
   // Мок-данные для тестирования, когда нет реального шагомера
@@ -21,8 +21,8 @@ class MockData {
     );
   }
   
-  static StepRecord get mockTodaySteps {
-    return StepRecord(
+  static Tracker get mockTodaySteps {
+    return Tracker(
       date: DateTime.now(),
       steps: 5432,
       distance: 4.3,
@@ -38,15 +38,15 @@ class MockData {
     );
   }
   
-  static List<StepRecord> get mockWeekHistory {
+  static List<Tracker> get mockWeekHistory {
     return [
-      StepRecord(date: DateTime.now().subtract(const Duration(days: 6)), steps: 7342, distance: 5.9),
-      StepRecord(date: DateTime.now().subtract(const Duration(days: 5)), steps: 8231, distance: 6.6),
-      StepRecord(date: DateTime.now().subtract(const Duration(days: 4)), steps: 6543, distance: 5.2),
-      StepRecord(date: DateTime.now().subtract(const Duration(days: 3)), steps: 9876, distance: 7.9),
-      StepRecord(date: DateTime.now().subtract(const Duration(days: 2)), steps: 4321, distance: 3.5),
-      StepRecord(date: DateTime.now().subtract(const Duration(days: 1)), steps: 5678, distance: 4.5),
-      StepRecord(date: DateTime.now(), steps: 5432, distance: 4.3),
+      Tracker(date: DateTime.now().subtract(const Duration(days: 6)), steps: 7342, distance: 5.9),
+      Tracker(date: DateTime.now().subtract(const Duration(days: 5)), steps: 8231, distance: 6.6),
+      Tracker(date: DateTime.now().subtract(const Duration(days: 4)), steps: 6543, distance: 5.2),
+      Tracker(date: DateTime.now().subtract(const Duration(days: 3)), steps: 9876, distance: 7.9),
+      Tracker(date: DateTime.now().subtract(const Duration(days: 2)), steps: 4321, distance: 3.5),
+      Tracker(date: DateTime.now().subtract(const Duration(days: 1)), steps: 5678, distance: 4.5),
+      Tracker(date: DateTime.now(), steps: 5432, distance: 4.3),
     ];
   }
 }
