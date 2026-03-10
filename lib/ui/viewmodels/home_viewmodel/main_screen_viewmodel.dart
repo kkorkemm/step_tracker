@@ -10,64 +10,60 @@ import '../../../data/repositories/challenge_repository.dart';
 enum ViewState { loading, normal, empty, error }
 
 class HomeState {
-  final ViewState state;  // текущее состояние
+  final ViewState state;
   final int todaySteps;
   final double todayDistance;
   final Challenge? activeChallenge;
   final Streak streak;
-  final bool isLoading;
-  final String? error;
-
-  // Конструктор с правильной инициализацией
-  HomeState({
-    this.todaySteps = 0,
-    this.todayDistance = 0,
-    this.activeChallenge,
-    Streak? streak,
-    this.isLoading = false,
-    this.error,
-  }) : this.streak = streak ?? Streak.empty(); // ВЫЗОВ ПОСЛЕ ДВОЕТОЧИЯ
-
-  // copyWith метод
-  HomeState copyWith({
-    int? todaySteps,
-    double? todayDistance,
-    Challenge? activeChallenge,
-    Streak? streak,
-    bool? isLoading,
-    String? error,
-  }) {
-    return HomeState(
-      todaySteps: todaySteps ?? this.todaySteps,
-      todayDistance: todayDistance ?? this.todayDistance,
-      activeChallenge: activeChallenge ?? this.activeChallenge,
-      streak: streak ?? this.streak,
-      isLoading: isLoading ?? this.isLoading,
-      error: error,
-    );
-  }
   final String? errorMessage;
-
-  const HomeState({
+  HomeState({
     this.state = ViewState.loading,
     this.todaySteps = 0,
     this.todayDistance = 0,
     this.activeChallenge,
-    this.streak = const Streak.empty(),
+    required this.streak,
     this.errorMessage,
   });
 
+  // Фабричный метод для начального состояния
+  factory HomeState.initial() {
+    return HomeState(
+      state: ViewState.loading,
+      streak: Streak.empty(),
+    );
+  }
+
+  // Геттеры
   bool get isLoading => state == ViewState.loading;
   bool get isEmpty => state == ViewState.empty;
   bool get isError => state == ViewState.error;
   bool get isNormal => state == ViewState.normal;
+
+  // copyWith метод
+  HomeState copyWith({
+    ViewState? state,
+    int? todaySteps,
+    double? todayDistance,
+    Challenge? activeChallenge,
+    Streak? streak,
+    String? errorMessage,
+  }) {
+    return HomeState(
+      state: state ?? this.state,
+      todaySteps: todaySteps ?? this.todaySteps,
+      todayDistance: todayDistance ?? this.todayDistance,
+      activeChallenge: activeChallenge ?? this.activeChallenge,
+      streak: streak ?? this.streak,
+      errorMessage: errorMessage ?? this.errorMessage,
+    );
+  }
 }
 
 class HomeViewModel extends ChangeNotifier {
   final TrackerRepository _trackerRepository;
   final ChallengeRepository _challengeRepository;
 
-  HomeState _state =  HomeState(isLoading: true);
+  HomeState _state = HomeState.initial();
   HomeState get state => _state;
 
   HomeViewModel({
@@ -78,75 +74,79 @@ class HomeViewModel extends ChangeNotifier {
     _init();
   }
 
- // Добавить метод для загрузки стрика
   Future<void> _loadStreak() async {
     final streak = await _trackerRepository.getStreak();
     _state = _state.copyWith(streak: streak);
   }
 
-  // Обновить _init()
   Future<void> _init() async {
-    _state = _state.copyWith(isLoading: true);
+    _state = _state.copyWith(state: ViewState.loading);
     notifyListeners();
 
     try {
       await Future.wait([
         _loadSteps(),
         _loadChallenge(),
-        _loadStreak(),                    // добавить загрузку стрика
+        _loadStreak(),
       ]);
+
+      if (_state.todaySteps == 0 && _state.activeChallenge == null) {
+        _state = _state.copyWith(state: ViewState.empty);
+      } else {
+        _state = _state.copyWith(state: ViewState.normal, errorMessage: null);
+      }
 
       _trackerRepository.stepStream.listen((steps) {
         _onStepsUpdated(steps);
       });
 
-      _state = _state.copyWith(isLoading: false, error: null);
     } catch (e) {
       _state = _state.copyWith(
-        isLoading: false,
-        error: 'Ошибка загрузки: $e',
+        state: ViewState.error,
+        errorMessage: 'Ошибка загрузки: $e',
       );
     }
 
     notifyListeners();
   }
 
-  // Обновить _onStepsUpdated
   void _onStepsUpdated(int steps) async {
     _state = _state.copyWith(
       todaySteps: steps,
       todayDistance: steps * 0.0008,
+      state: ViewState.normal,
     );
     notifyListeners();
 
-    // Сохраняем шаги (метод сам обновит стрик)
     await _trackerRepository.saveSteps(steps);
-    
-    // Обновляем прогресс челленджа
     await _challengeRepository.updateProgress(
       steps - _state.todaySteps,
     );
-    
-    // Перезагружаем стрик (он уже обновился в saveSteps)
     await _loadStreak();
   }
 
   Future<void> resetSteps() async {
-    await _trackerRepository.resetTodaySteps();  // теперь сбрасывает и шагомер
+    await _trackerRepository.resetTodaySteps();
     await _loadSteps();
     await _loadStreak();
+    _state = _state.copyWith(state: ViewState.normal);
+    notifyListeners();
   }
 
-  // Обновить refresh()
   Future<void> refresh() async {
+    _state = _state.copyWith(state: ViewState.loading);
+    notifyListeners();
+    
     await Future.wait([
       _loadSteps(),
       _loadChallenge(),
       _loadStreak(),
     ]);
+    
+    _state = _state.copyWith(state: ViewState.normal);
+    notifyListeners();
   }
 
-  // Загрузка шагов
   Future<void> _loadSteps() async {
     final record = await _trackerRepository.getTodayTracker();
     _state = _state.copyWith(
@@ -155,18 +155,18 @@ class HomeViewModel extends ChangeNotifier {
     );
   }
 
-  // Загрузка челленджа
   Future<void> _loadChallenge() async {
     final challenge = await _challengeRepository.getActiveChallenge();
     _state = _state.copyWith(activeChallenge: challenge);
   }
-  // Создать тестовый челлендж
+
   Future<void> createTestChallenge() async {
     await _challengeRepository.createTestChallenge();
     await _loadChallenge();
+    _state = _state.copyWith(state: ViewState.normal);
+    notifyListeners();
   }
 
-  // Добавить тестовые шаги
   void addTestSteps() {
     _onStepsUpdated(_state.todaySteps + 1000);
   }

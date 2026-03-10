@@ -1,6 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/home_viewmodel/main_screen_viewmodel.dart';
+import '../../viewmodels/home_viewmodel/main_screen_viewmodel.dart';  // исправьте путь, если нужно
 import '../../../data/domain_models/challenge.dart';
 
 class MainScreen extends StatelessWidget {
@@ -17,8 +17,12 @@ class MainScreen extends StatelessWidget {
             return const Center(child: CircularProgressIndicator());
           }
 
-          if (state.error != null) {
+          if (state.errorMessage != null) {
             return _buildErrorState(viewModel);
+          }
+
+          if (state.isEmpty) {
+            return _buildEmptyState(viewModel);
           }
 
           return RefreshIndicator(
@@ -27,15 +31,11 @@ class MainScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Круговой трекер
                   _buildCircularTracker(state),
                   const SizedBox(height: 24),
-                  
-                  // Статистика (калории, км, часы)
                   _buildStatsRow(state),
                   const SizedBox(height: 32),
                   
-                  // Активный челлендж
                   if (state.activeChallenge != null) ...[
                     const Text(
                       'Активный челлендж',
@@ -60,7 +60,7 @@ class MainScreen extends StatelessWidget {
   }
 
   Widget _buildCircularTracker(HomeState state) {
-    final progress = state.todaySteps / 10000; // цель 10000 шагов
+    final progress = state.todaySteps / 10000;
     
     return Container(
       padding: const EdgeInsets.all(20),
@@ -69,7 +69,6 @@ class MainScreen extends StatelessWidget {
           Stack(
             alignment: Alignment.center,
             children: [
-              // Круговой прогресс
               SizedBox(
                 width: 200,
                 height: 200,
@@ -82,7 +81,6 @@ class MainScreen extends StatelessWidget {
                   ),
                 ),
               ),
-              // Текст посередине
               Column(
                 mainAxisSize: MainAxisSize.min,
                 children: [
@@ -105,7 +103,8 @@ class MainScreen extends StatelessWidget {
             ],
           ),
           const SizedBox(height: 16),
-
+          
+          // Стрик
           Container(
             padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
             decoration: BoxDecoration(
@@ -150,9 +149,8 @@ class MainScreen extends StatelessWidget {
   }
 
   Widget _buildStatsRow(HomeState state) {
-    // Примерные расчёты
-    final calories = (state.todaySteps * 0.04).toInt(); // 1 шаг ≈ 0.04 ккал
-    final hoursActive = (state.todaySteps / 1000).toStringAsFixed(1); // условно
+    final calories = (state.todaySteps * 0.04).toInt();
+    final hoursActive = (state.todaySteps / 1000).toStringAsFixed(1);
 
     return Row(
       mainAxisAlignment: MainAxisAlignment.spaceEvenly,
@@ -298,6 +296,7 @@ class MainScreen extends StatelessWidget {
     );
   }
 
+  // ИСПРАВЛЕНО: используем errorMessage
   Widget _buildErrorState(HomeViewModel viewModel) {
     return Center(
       child: Padding(
@@ -308,7 +307,7 @@ class MainScreen extends StatelessWidget {
             const Icon(Icons.error_outline, size: 64, color: Colors.red),
             const SizedBox(height: 16),
             Text(
-              viewModel.state.error!,
+              viewModel.state.errorMessage ?? 'Неизвестная ошибка',
               style: const TextStyle(fontSize: 16),
               textAlign: TextAlign.center,
             ),
@@ -323,12 +322,36 @@ class MainScreen extends StatelessWidget {
     );
   }
 
+  Widget _buildEmptyState(HomeViewModel viewModel) {
+    return Center(
+      child: Padding(
+        padding: const EdgeInsets.all(16),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            const Icon(Icons.info_outline, size: 64, color: Colors.grey),
+            const SizedBox(height: 16),
+            const Text(
+              'Нет данных. Начните ходить или создайте челлендж!',
+              style: TextStyle(fontSize: 16),
+              textAlign: TextAlign.center,
+            ),
+            const SizedBox(height: 24),
+            ElevatedButton(
+              onPressed: () => viewModel.createTestChallenge(),
+              child: const Text('Создать тестовый челлендж'),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
   Widget _buildTestButtons(HomeViewModel viewModel) {
     return Column(
       children: [
         Row(
           children: [
-            // Кнопка +1000
             Expanded(
               child: ElevatedButton.icon(
                 onPressed: () => viewModel.addTestSteps(),
