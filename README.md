@@ -36,6 +36,7 @@
   ```
 git clone https://github.com/kkorkemm/step_tracker.git
 cd step_tracker
+git checkout develop 
 flutter pub get
 flutter run
 ```
