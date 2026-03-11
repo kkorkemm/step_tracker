@@ -168,8 +168,12 @@ class StorageService {
   Future<void> clearAll() async {
     final stepsBox = Hive.box<int>(_stepsBox);
     final challengeBox = Hive.box<Map>(_challengeBox);
+    final streakBox = Hive.box<Map>(_streakBox);
+    
     await stepsBox.clear();
     await challengeBox.clear();
+    await streakBox.clear();
+    
     print('Все данные очищены');
   }
 }

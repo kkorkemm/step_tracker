@@ -14,7 +14,7 @@ class TrackerRepository {
        _stepService = stepService;
 
   Future<Tracker> getTodayTracker() async {
-    final steps = await _storage.getTodaySteps();
+    final steps = _stepService.currentSteps;
     return Tracker(
       date: DateTime.now(),
       steps: steps,
@@ -42,6 +42,6 @@ class TrackerRepository {
 
   Future<void> resetTodaySteps() async {
     await _storage.resetTodaySteps();
-    resetStepCounter();  // ← сбрасываем и счётчик шагомера
+    resetStepCounter();  // сбрасываем и счётчик шагомера
   }
 }
