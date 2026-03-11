@@ -35,11 +35,8 @@ class MainScreen extends StatelessWidget {
               padding: const EdgeInsets.all(16),
               child: Column(
                 children: [
-                  // Круговой трекер
                   _buildCircularTracker(state),
                   const SizedBox(height: 24),
-                  
-                  // Статистика (калории, км, часы)
                   _buildStatsRow(state),
                   const SizedBox(height: 32),
                   
@@ -296,6 +293,7 @@ class MainScreen extends StatelessWidget {
     );
   }
 
+  // ИСПРАВЛЕНО: используем errorMessage
   Widget _buildErrorState(HomeViewModel viewModel) {
     return Center(
       child: Padding(

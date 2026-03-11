@@ -1,4 +1,8 @@
 import '../domain_models/challenge.dart';
+// ignore: unused_import
+import '../enumerations/challenge_status.dart';
+// ignore: unused_import
+import '../enumerations/challenge_type.dart';
 import '../mocks/mock_data.dart';
 import 'challenge_repository.dart'; // импортируем интерфейс
 
