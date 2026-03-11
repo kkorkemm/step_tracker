@@ -4,28 +4,27 @@ import '../enumerations/challenge_status.dart';
 // ignore: unused_import
 import '../enumerations/challenge_type.dart';
 import '../mocks/mock_data.dart';
+import 'challenge_repository.dart'; // импортируем интерфейс
 
-class MockChallengeRepository {
-  // Имитация загрузки
+class MockChallengeRepository implements ChallengeRepository {
+  @override
   Future<Challenge?> getActiveChallenge() async {
-    await Future.delayed(const Duration(seconds: 1)); // имитация загрузки
-    return MockData.mockActiveChallenge;
+    await Future.delayed(const Duration(seconds: 1));
+    return MockData.mockChallenge;
   }
-  
+
+  @override
+  Future<void> saveChallenge(Challenge challenge) async {
+    print('Мок: сохранён челлендж ${challenge.title}');
+  }
+
+  @override
+  Future<void> updateProgress(int additionalSteps) async {
+    print('Мок: обновлён прогресс на +$additionalSteps');
+  }
+
+  @override
   Future<void> createTestChallenge() async {
-    await Future.delayed(const Duration(milliseconds: 500));
-    print('Мок-челлендж создан');
-  }
-  
-  // Для тестирования пустого состояния
-  Future<Challenge?> getEmptyChallenge() async {
-    await Future.delayed(const Duration(seconds: 1));
-    return null;
-  }
-  
-  // Для тестирования ошибки
-  Future<Challenge?> getErrorChallenge() async {
-    await Future.delayed(const Duration(seconds: 1));
-    throw Exception('Ошибка загрузки челленджа');
+    print('Мок: создан тестовый челлендж');
   }
 }
