@@ -1,7 +1,11 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
-import '../../viewmodels/home_viewmodel/main_screen_viewmodel.dart';  // исправьте путь, если нужно
+import 'package:hive/hive.dart';
+import '../../viewmodels/home_viewmodel/main_screen_viewmodel.dart';
 import '../../../data/domain_models/challenge.dart';
+import '../../../data/services/storage_service.dart';
+import '../../../data/services/step_service.dart';
+import '../../../data/repositories/tracker_repository.dart';
 
 class MainScreen extends StatelessWidget {
   const MainScreen({super.key});
@@ -36,20 +40,13 @@ class MainScreen extends StatelessWidget {
                   _buildStatsRow(state),
                   const SizedBox(height: 32),
                   
+                  // Активный челлендж (только карточка, без заголовка)
                   if (state.activeChallenge != null) ...[
-                    const Text(
-                      'Активный челлендж',
-                      style: TextStyle(
-                        fontSize: 18,
-                        fontWeight: FontWeight.bold,
-                      ),
-                    ),
-                    const SizedBox(height: 12),
                     _buildActiveChallenge(state.activeChallenge!),
                   ],
                   
                   const SizedBox(height: 20),
-                  _buildTestButtons(viewModel),
+                  _buildTestButtons(viewModel, context),
                 ],
               ),
             ),
@@ -347,7 +344,7 @@ class MainScreen extends StatelessWidget {
     );
   }
 
-  Widget _buildTestButtons(HomeViewModel viewModel) {
+  Widget _buildTestButtons(HomeViewModel viewModel, BuildContext context) {
     return Column(
       children: [
         Row(
@@ -375,7 +372,44 @@ class MainScreen extends StatelessWidget {
               ),
             ),
           ],
+          
         ),
+        /*const SizedBox(height: 8),
+        Row(
+          children: [
+            Expanded(
+              child: ElevatedButton.icon(
+                onPressed: () async {
+                  // Очистить базу шагов
+                  await Hive.deleteBoxFromDisk('steps');
+                  await Hive.openBox<int>('steps');
+                  final box = await Hive.openBox<int>('steps');
+                  final today = DateTime.now().toIso8601String().split('T')[0];
+                  await box.put(today, 0);
+                  print("Удалена запись за сегодня");
+
+                  await context.read<HomeViewModel>().refresh();
+                  
+                  if (context.mounted) {
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('Шаги за сегодня очищены'),
+                        backgroundColor: Colors.green,
+                      ),
+                    );
+                  }
+                },
+                icon: const Icon(Icons.delete_sweep),
+                label: const Text('Очистить шаги за сегодня'),
+                style: ElevatedButton.styleFrom(
+                  backgroundColor: Colors.red,
+                  foregroundColor: Colors.white,
+                ),
+              ),
+            ),
+          ],
+        ),
+        */
         const SizedBox(height: 8),
         TextButton(
           onPressed: () => viewModel.createTestChallenge(),
