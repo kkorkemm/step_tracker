@@ -4,28 +4,84 @@ import 'package:hive_flutter/hive_flutter.dart';
 import '../domain_models/challenge.dart';
 // ignore: unused_import
 import '../domain_models/tracker.dart';
+import '../domain_models/streak.dart';
 import '../enumerations/challenge_status.dart';
 import '../enumerations/challenge_type.dart';
 
 class StorageService {
   static const String _stepsBox = 'steps';
   static const String _challengeBox = 'challenges';
+  static const String _streakBox = 'streak';
 
   // Инициализация Hive
   Future<void> init() async {
     await Hive.initFlutter();
     await Hive.openBox<int>(_stepsBox);
     await Hive.openBox<Map>(_challengeBox);
+    await Hive.openBox<Map>(_streakBox);
     print('Hive инициализирован');
   }
 
-  // ---------- Работа с шагами ----------
+  // ---------- Работа со стриком ----------
+  Future<void> saveStreak(Streak streak) async {
+    final box = Hive.box<Map>(_streakBox);
+    await box.put('streak', {
+      'currentStreak': streak.currentStreak,
+      'longestStreak': streak.longestStreak,
+      'lastActiveDay': streak.lastActiveDay.toIso8601String(),
+      'isActive': streak.isActive,
+    });
+    print('Стрик сохранён: ${streak.currentStreak} дней');
+  }
+
+  Future<Streak> getStreak() async {
+    final box = Hive.box<Map>(_streakBox);
+    final data = box.get('streak');
+
+    if (data == null) {
+      return Streak.empty();
+    }
+
+    try {
+      return Streak(
+        currentStreak: data['currentStreak'] ?? 0,
+        longestStreak: data['longestStreak'] ?? 0,
+        lastActiveDay: DateTime.parse(data['lastActiveDay']),
+        isActive: data['isActive'] ?? false,
+      );
+    } catch (e) {
+      print('Ошибка при чтении стрика: $e');
+      return Streak.empty();
+    }
+  }
+
   Future<void> saveTodaySteps(int steps) async {
     final box = Hive.box<int>(_stepsBox);
     final today = _getTodayKey();
     await box.put(today, steps);
+    
+    final streak = await getStreak();
+    final updatedStreak = streak.updateWithSteps(steps, 10000); // цель 10000 шагов
+    await saveStreak(updatedStreak);
+    
     print('Сохранено: $today = $steps шагов');
   }
+
+  // Метод для сброса шагов за сегодня (для тестовой кнопки)
+  Future<void> resetTodaySteps() async {
+    final box = Hive.box<int>(_stepsBox);
+    final today = _getTodayKey();
+    await box.put(today, 0);
+    
+    // Пересчитываем стрик
+    final streak = await getStreak();
+    final updatedStreak = streak.updateWithSteps(0, 10000);
+    await saveStreak(updatedStreak);
+    
+    print('Шаги за сегодня сброшены');
+  }
+
+  // ---------- Работа с шагами ----------
 
   Future<int> getTodaySteps() async {
     final box = Hive.box<int>(_stepsBox);
@@ -112,8 +168,12 @@ class StorageService {
   Future<void> clearAll() async {
     final stepsBox = Hive.box<int>(_stepsBox);
     final challengeBox = Hive.box<Map>(_challengeBox);
+    final streakBox = Hive.box<Map>(_streakBox);
+    
     await stepsBox.clear();
     await challengeBox.clear();
+    await streakBox.clear();
+    
     print('Все данные очищены');
   }
 }
