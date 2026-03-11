@@ -1,10 +1,13 @@
-main.dart
-
 import 'package:flutter/material.dart';
+// ignore: unnecessary_import
+import 'package:hive/hive.dart';
+import 'package:hive_flutter/hive_flutter.dart';
 import 'package:provider/provider.dart';
 import 'data/services/step_service.dart';
 import 'data/services/storage_service.dart';
 import 'data/repositories/tracker_repository.dart';
+import 'data/repositories/mock_challenge_repository.dart';
+import 'data/repositories/mock_tracker_repository.dart';
 import 'data/repositories/challenge_repository.dart';
 import 'ui/viewmodels/home_viewmodel/main_screen_viewmodel.dart';
 import 'ui/viewmodels/friends_viewmodel/friends_achievement_viewmodel.dart';
@@ -14,27 +17,56 @@ import 'ui/views/home_screen/main_screen.dart';
 import 'ui/views/friends_screen/friends_achievements_screen.dart';
 import 'ui/views/challenge_screen/challenge_list_screen.dart';
 import 'ui/views/profile_screen/user_screen.dart';
-
-// Флаг для переключения между моками и реальностью
-const bool USE_MOCKS = true; // false - реальные данные
+const bool USE_MOCKS = true;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (USE_MOCKS) {
-    print('Используем МОК-данные для тестирования');
-    runApp(MyApp());
-  } else {
-    // Реальная инициализация
-    final storageService = StorageService();
-    await storageService.init();
-    final stepService = StepService();
-    await stepService.startListening();
-    runApp(MyApp(
-      storageService: storageService,
-      stepService: stepService,
-    ));
+ // Инициализация Hive
+  await Hive.initFlutter();
+  
+  // Флаг первого запуска
+  final firstRun = await _isFirstRun();
+  
+  if (firstRun) {
+    print('Первый запуск, очищаем старые данные');
+    await Hive.deleteBoxFromDisk('steps');
+    await Hive.deleteBoxFromDisk('challenges');
+    await Hive.deleteBoxFromDisk('streak');
   }
+  
+  // Открываем боксы
+  await Hive.openBox<int>('steps');
+  await Hive.openBox<Map>('challenges');
+  await Hive.openBox<Map>('streak');
+  
+  // Если первый запуск, устанавливаем шаги в 0
+  if (firstRun) {
+    final stepsBox = Hive.box<int>('steps');
+    final today = DateTime.now().toIso8601String().split('T')[0];
+    await stepsBox.put(today, 0);
+    await _saveFirstRunFlag(false);
+  }
+
+  final storageService = StorageService();
+  final stepService = StepService();
+  await stepService.startListening();
+
+  runApp(MyApp(
+    storageService: storageService,
+    stepService: stepService,
+  ));
+}
+
+Future<bool> _isFirstRun() async {
+  final box = await Hive.openBox<bool>('settings');
+  final firstRun = box.get('firstRun', defaultValue: true);
+  return firstRun == true;
+}
+
+Future<void> _saveFirstRunFlag(bool value) async {
+  final box = await Hive.openBox<bool>('settings');
+  await box.put('firstRun', value);
 }
 
 class MyApp extends StatelessWidget {
@@ -54,8 +86,16 @@ class MyApp extends StatelessWidget {
         // Сервисы
         Provider.value(value: storageService),
         Provider.value(value: stepService),
-
-        // Репозитории
+      if (USE_MOCKS) ...[
+        // МОК-РЕПОЗИТОРИИ (для тестирования)
+        Provider<TrackerRepository>(
+          create: (_) => MockTrackerRepository(),
+        ),
+        Provider<ChallengeRepository>(
+          create: (_) => MockChallengeRepository(),
+        ),
+      ] else ...[
+        // РЕАЛЬНЫЕ РЕПОЗИТОРИИ (с Hive и шагомером)
         ProxyProvider2<StorageService, StepService, TrackerRepository>(
           update: (_, storage, step, __) => TrackerRepository(
             storage: storage,
@@ -65,22 +105,23 @@ class MyApp extends StatelessWidget {
         ProxyProvider<StorageService, ChallengeRepository>(
           update: (_, storage, __) => ChallengeRepository(storage: storage),
         ),
-
-        // ViewModels
-        ChangeNotifierProxyProvider2<TrackerRepository, ChallengeRepository, HomeViewModel>(
-          create: (context) => HomeViewModel(
-            trackerRepository: context.read<TrackerRepository>(),
-            challengeRepository: context.read<ChallengeRepository>(),
-          ),
-          update: (_, tracker, challenge, __) => HomeViewModel(
-            trackerRepository: tracker,
-            challengeRepository: challenge,
-          ),
-        ),
-        ChangeNotifierProvider(create: (_) => FriendsViewModel()),
-        ChangeNotifierProvider(create: (_) => ChallengeViewModel()),
-        ChangeNotifierProvider(create: (_) => ProfileViewModel()),
       ],
+
+      // ========== VIEWMODELS ==========
+      ChangeNotifierProxyProvider2<TrackerRepository, ChallengeRepository, HomeViewModel>(
+        create: (context) => HomeViewModel(
+          trackerRepository: context.read<TrackerRepository>(),
+          challengeRepository: context.read<ChallengeRepository>(),
+        ),
+        update: (_, tracker, challenge, __) => HomeViewModel(
+          trackerRepository: tracker,
+          challengeRepository: challenge,
+        ),
+      ),
+      ChangeNotifierProvider(create: (_) => FriendsViewModel()),
+      ChangeNotifierProvider(create: (_) => ChallengeViewModel()),
+      ChangeNotifierProvider(create: (_) => ProfileViewModel()),
+    ],
       child: MaterialApp(
         title: 'Foot Crew - трекер шагов с друзьями',
         theme: ThemeData(
