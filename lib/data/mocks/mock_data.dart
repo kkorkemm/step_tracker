@@ -5,6 +5,7 @@ import '../enumerations/challenge_status.dart';
 import '../enumerations/challenge_type.dart';
 
 class MockData {
+
   // Мок-данные для тестирования, когда нет реального шагомера
   
   static Challenge get mockActiveChallenge {
@@ -35,6 +36,20 @@ class MockData {
       longestStreak: 12,
       lastActiveDay: DateTime.now(),
       isActive: true,
+    );
+  }
+
+  static Challenge get mockChallenge {
+    return Challenge(
+      id: 'mock-challenge-1',
+      title: 'Мартовский марафон',
+      description: '10 000 шагов ежедневно',
+      goalSteps: 10000,
+      progress: 5432,
+      startDate: DateTime.now().subtract(const Duration(days: 2)),
+      endDate: DateTime.now().add(const Duration(days: 5)),
+      status: ChallengeStatus.active,
+      type: ChallengeType.personal,
     );
   }
   

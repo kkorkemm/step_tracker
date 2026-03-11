@@ -7,7 +7,7 @@ import 'tracker_repository.dart';
 class MockTrackerRepository implements TrackerRepository {
   @override
   Future<Tracker> getTodayTracker() async {
-    await Future.delayed(const Duration(seconds: 1));
+    await Future.delayed(const Duration(seconds: 5));
     return MockData.mockTodaySteps;
   }
 

@@ -111,19 +111,22 @@ class HomeViewModel extends ChangeNotifier {
   }
 
   void _onStepsUpdated(int steps) async {
-    _state = _state.copyWith(
-      todaySteps: steps,
-      todayDistance: steps * 0.0008,
-      state: ViewState.normal,
-    );
-    notifyListeners();
+  final previousSteps = _state.todaySteps;
+  final delta = steps - previousSteps;
 
-    await _trackerRepository.saveSteps(steps);
-    await _challengeRepository.updateProgress(
-      steps - _state.todaySteps,
-    );
-    await _loadStreak();
+  _state = _state.copyWith(
+    todaySteps: steps,
+    todayDistance: steps * 0.0008,
+    state: ViewState.normal,
+  );
+  notifyListeners();
+
+  // Сохранять шаги не нужно, StepService уже сохранил
+  if (delta > 0) {
+    await _challengeRepository.updateProgress(delta);
   }
+  await _loadStreak();
+}
 
   Future<void> resetSteps() async {
     await _trackerRepository.resetTodaySteps();
