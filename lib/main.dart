@@ -17,7 +17,7 @@ import 'ui/views/home_screen/main_screen.dart';
 import 'ui/views/friends_screen/friends_achievements_screen.dart';
 import 'ui/views/challenge_screen/challenge_list_screen.dart';
 import 'ui/views/profile_screen/user_screen.dart';
-const bool USE_MOCKS = true;
+const bool USE_MOCKS = false;
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
