@@ -153,17 +153,9 @@ class HomeViewModel extends ChangeNotifier {
   Future<void> _loadSteps() async {
     final record = await _trackerRepository.getTodayTracker();
     _state = _state.copyWith(
-      todaySteps: steps,
-      todayDistance: steps * 0.0008,
-      state: ViewState.normal,
+      todaySteps: record.steps,
+      todayDistance: record.distance,
     );
-    notifyListeners();
-
-    await _trackerRepository.saveSteps(steps);
-    await _challengeRepository.updateProgress(
-      steps - _state.todaySteps,
-    );
-    await _loadStreak();
   }
 
   Future<void> _loadChallenge() async {
