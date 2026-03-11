@@ -1,5 +1,3 @@
-main.dart
-
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
 import 'data/services/step_service.dart';
@@ -15,26 +13,20 @@ import 'ui/views/friends_screen/friends_achievements_screen.dart';
 import 'ui/views/challenge_screen/challenge_list_screen.dart';
 import 'ui/views/profile_screen/user_screen.dart';
 
-// Флаг для переключения между моками и реальностью
-const bool USE_MOCKS = true; // false - реальные данные
-
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
 
-  if (USE_MOCKS) {
-    print('Используем МОК-данные для тестирования');
-    runApp(MyApp());
-  } else {
-    // Реальная инициализация
-    final storageService = StorageService();
-    await storageService.init();
-    final stepService = StepService();
-    await stepService.startListening();
-    runApp(MyApp(
-      storageService: storageService,
-      stepService: stepService,
-    ));
-  }
+  // Инициализация сервисов
+  final storageService = StorageService();
+  await storageService.init();
+
+  final stepService = StepService();
+  await stepService.startListening();
+
+  runApp(MyApp(
+    storageService: storageService,
+    stepService: stepService,
+  ));
 }
 
 class MyApp extends StatelessWidget {
