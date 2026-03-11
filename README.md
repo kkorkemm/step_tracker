@@ -14,16 +14,23 @@
 
 В прототипе:
 - Главный экран с круговым прогрессом шагов, количеством шагов (из моков или реальные), дистанцией, калориями, часами активности, текущим стриком (серией дней)
-- Активный челлендж отображается внизу (берётся из моков)
+- Активный челлендж отображается внизу (берётся заготовленный тестовый)
 - Тестовые кнопки:
-  - "+1000" — добавить шаги (тестирование)
-  - "Сброс" — сбросить шаги за сегодня
+  - "+1000" — добавить шаги (тестирование отображения кругового прогресса и заполнения шкалы в активном челлендже)
+  - "Сброс" — сбросить шаги за сегодняе
   - "Создать тестовый челлендж" — создать мок-челлендж
 - Обработка состояний:
   - loading — индикатор загрузки при старте
   - normal — основной режим с данными
   - empty — сообщение, если нет челленджа
   - error — сообщение об ошибке с кнопкой повтора
+
+<img width="300" height="640" alt="image" src="https://github.com/user-attachments/assets/ee3ec393-e327-4b73-848e-846369ea9689" />
+<img width="300" height="640" alt="image" src="https://github.com/user-attachments/assets/03ef4cf0-7876-4b64-9473-519fb9f67aba" />
+<img width="300" height="640" alt="image" src="https://github.com/user-attachments/assets/1a5edc48-da01-40b5-bacc-ab330cff4ab8" />
+<img width="300" height="640" alt="image" src="https://github.com/user-attachments/assets/723430f7-ae64-4c89-a4c2-303d1f8b9d43" />
+
+
  
 ## Соответствие макетам
 Приложение реализует макет из ДЗ2:
@@ -49,4 +56,4 @@ const bool USE_MOCKS = true; // true - моки, false - реальные дан
 ```
 Мок-данные находятся в:
 - ```lib/data/mocks/mock_data.dart``` — сами данные
-- ```lib/data/repositories/mock_challenge_repository.dart``` — мок-репозиторий
+- ```lib/data/repositories/mock_challenge_repository.dart``` и ```lib/data/repositories/mock_tracker_repository.dart``` — мок-репозитории
