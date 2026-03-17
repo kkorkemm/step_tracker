@@ -63,6 +63,7 @@ class MockData {
       Tracker(date: DateTime.now().subtract(const Duration(days: 1)), steps: 5678, distance: 4.5),
       Tracker(date: DateTime.now(), steps: 5432, distance: 4.3),
     ];
+  }
 
     // Личные челленджи
   static List<Challenge> get mockPersonalChallenges {
