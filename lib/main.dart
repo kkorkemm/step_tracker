@@ -119,7 +119,8 @@ class MyApp extends StatelessWidget {
         ),
       ),
       ChangeNotifierProvider(create: (_) => FriendsViewModel()),
-      ChangeNotifierProvider(create: (_) => ChallengeViewModel()),
+      ChangeNotifierProvider(create: (_) => ChallengeViewModel(
+      challengeRepository: MockChallengeRepository())),
       ChangeNotifierProvider(create: (_) => ProfileViewModel()),
     ],
       child: MaterialApp(
