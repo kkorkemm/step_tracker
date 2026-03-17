@@ -48,6 +48,12 @@ flutter pub get
 flutter run
 ```
 
+## APK
+Скачать apk проекта можно здесь:
+```
+https://github.com/kkorkemm/step_tracker/releases/tag/v0.0.1
+```
+
 ## Мок-данные
 Для тестирования без реального шагомера используются мок-данные.
 Переключение между моками и реальными данными в ```lib/main.dart```:
